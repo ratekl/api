@@ -11,6 +11,11 @@ import {
   PropertyType,
   resolveType,
   isTypeResolver,
+  FilterExcludingWhere,
+  Where,
+  Count,
+  InvalidBodyError,
+  AnyObject,
 } from "@loopback/repository";
 import { Request, RequestContext } from "@loopback/rest";
 import { DomainRepository } from "./repositories/domain.repository";
@@ -25,6 +30,9 @@ export class MultiRepository<
    * Constructor of DefaultCrudRepository
    * @param entityClass - LoopBack 4 entity class
    * @param dataSource - Legacy juggler data source
+   * @param request - The current request
+   * @param context - The current request context
+   * @param domainRepository - The domain repository used to fetch db names
    */
   constructor(
     // EntityClass should have type "typeof T", but that's not supported by TSC
@@ -35,6 +43,179 @@ export class MultiRepository<
     public domainRepository: DomainRepository
   ) {
     super(entityClass, dataSource)
+  }
+
+  async create(entity: DataObject<T>, options?: Options): Promise<T> {
+    const currentModel = await this._getModel(this.entityClass);
+    // perform persist hook
+    const data = await this.entityToData(entity, options);
+    const model = await ensurePromise(currentModel.create(data, options));
+    return this.toEntity(model);
+  }
+
+  async createAll(entities: DataObject<T>[], options?: Options): Promise<T[]> {
+    const currentModel = await this._getModel(this.entityClass);
+    // perform persist hook
+    const data = await Promise.all(
+      entities.map(e => this.entityToData(e, options)),
+    );
+    const models = await ensurePromise(
+      currentModel.createAll(data, options),
+    );
+    return this.toEntities(models);
+  }
+
+  async save(entity: T, options?: Options): Promise<T> {
+    const id = this.entityClass.getIdOf(entity);
+    if (id == null) {
+      return this.create(entity, options);
+    } else {
+      await this.replaceById(id, entity, options);
+      return new this.entityClass(entity.toObject()) as T;
+    }
+  }
+
+  async find(
+    filter?: Filter<T>,
+    options?: Options,
+  ): Promise<(T & Relations)[]> {
+    const currentModel = await this._getModel(this.entityClass);
+    const include = filter?.include;
+    const models = await ensurePromise(
+      currentModel.find(this.normalizeFilter(filter), options),
+    );
+    const entities = this.toEntities(models);
+    return this.includeRelatedModels(entities, include, options);
+  }
+
+  async findOne(
+    filter?: Filter<T>,
+    options?: Options,
+  ): Promise<(T & Relations) | null> {
+    const currentModel = await this._getModel(this.entityClass);
+    const model = await ensurePromise(
+      currentModel.findOne(this.normalizeFilter(filter), options),
+    );
+    if (!model) return null;
+    const entity = this.toEntity(model);
+    const include = filter?.include;
+    const resolved = await this.includeRelatedModels(
+      [entity],
+      include,
+      options,
+    );
+    return resolved[0];
+  }
+
+  async findById(
+    id: ID,
+    filter?: FilterExcludingWhere<T>,
+    options?: Options,
+  ): Promise<T & Relations> {
+    const currentModel = await this._getModel(this.entityClass);
+    const include = filter?.include;
+    const model = await ensurePromise(
+      currentModel.findById(id, this.normalizeFilter(filter), options),
+    );
+    if (!model) {
+      throw new EntityNotFoundError(this.entityClass, id);
+    }
+    const entity = this.toEntity(model);
+    const resolved = await this.includeRelatedModels(
+      [entity],
+      include,
+      options,
+    );
+    return resolved[0];
+  }
+
+  update(entity: T, options?: Options): Promise<void> {
+    return this.updateById(entity.getId(), entity, options);
+  }
+
+  async delete(entity: T, options?: Options): Promise<void> {
+    // perform persist hook
+    await this.entityToData(entity, options);
+    return this.deleteById(entity.getId(), options);
+  }
+
+  async updateAll(
+    data: DataObject<T>,
+    where?: Where<T>,
+    options?: Options,
+  ): Promise<Count> {
+    const currentModel = await this._getModel(this.entityClass);
+    where = where ?? {};
+    const persistedData = await this.entityToData(data, options);
+    const result = await ensurePromise(
+      currentModel.updateAll(where, persistedData, options),
+    );
+    return {count: result.count};
+  }
+
+  async updateById(
+    id: ID,
+    data: DataObject<T>,
+    options?: Options,
+  ): Promise<void> {
+    const currentModel = await this._getModel(this.entityClass);
+    if (!Object.keys(data).length) {
+      throw new InvalidBodyError(this.entityClass, id);
+    }
+    if (id === undefined) {
+      throw new Error('Invalid Argument: id cannot be undefined');
+    }
+    const idProp = currentModel.definition.idName();
+    const where = {} as Where<T>;
+    (where as AnyObject)[idProp] = id;
+    const result = await this.updateAll(data, where, options);
+    if (result.count === 0) {
+      throw new EntityNotFoundError(this.entityClass, id);
+    }
+  }
+
+  async replaceById(
+    id: ID,
+    data: DataObject<T>,
+    options?: Options,
+  ): Promise<void> {
+    const currentModel = await this._getModel(this.entityClass);
+    try {
+      const payload = await this.entityToData(data, options);
+      await ensurePromise(currentModel.replaceById(id, payload, options));
+    } catch (err) {
+      if (err.statusCode === 404) {
+        throw new EntityNotFoundError(this.entityClass, id);
+      }
+      throw err;
+    }
+  }
+
+  async deleteAll(where?: Where<T>, options?: Options): Promise<Count> {
+    const currentModel = await this._getModel(this.entityClass);
+    const result = await ensurePromise(
+      currentModel.deleteAll(where, options),
+    );
+    return {count: result.count};
+  }
+
+  async deleteById(id: ID, options?: Options): Promise<void> {
+    const currentModel = await this._getModel(this.entityClass);
+    const result = await ensurePromise(currentModel.deleteById(id, options));
+    if (result.count === 0) {
+      throw new EntityNotFoundError(this.entityClass, id);
+    }
+  }
+
+  async count(where?: Where<T>, options?: Options): Promise<Count> {
+    const currentModel = await this._getModel(this.entityClass);
+    const result = await ensurePromise(currentModel.count(where, options));
+    return {count: result};
+  }
+
+  async exists(id: ID, options?: Options): Promise<boolean> {
+    const currentModel = await this._getModel(this.entityClass);
+    return await ensurePromise(currentModel.exists(id, options));
   }
 
   private _getModelName(name: string) {
@@ -127,50 +308,7 @@ export class MultiRepository<
       : resolved;
   }
 
-  async find(
-    filter?: Filter<T>,
-    options?: Options,
-  ): Promise<(T & Relations)[]> {
-    const include = filter?.include;
-    const currentModel = await this._getModel(this.entityClass);
-    const models = await ensurePromise(
-      currentModel.find(this.normalizeFilter(filter), options),
-    );
-    const entities = this.toEntities(models);
-    return this.includeRelatedModels(entities, include, options);
-  }
-
-
-  async create(entity: DataObject<T>, options?: Options): Promise<T> {
-    const currentModel = await this._getModel(this.entityClass);
-    // perform persist hook
-    const data = await this.entityToData(entity, options);
-    const model = await ensurePromise(currentModel.create(data, options));
-    return this.toEntity(model);
-  }
-
-  // async find(
-  //   filter?: Filter<T>,
-  //   options?: Options
-  // ): Promise<(T & Relations)[]> {
-  //   const multiOptions = await this._getMultiOptions(this.request?.hostname);
-
-  //   console.log("in multi-repository find");
-  //   console.log({ ...options, ...multiOptions });
-
-  //   return super.find(filter, { ...options, ...multiOptions });
-  // }
-
-  // async create(entity: DataObject<T>, options?: Options): Promise<T> {
-  //   const multiOptions = await this._getMultiOptions(this.request?.hostname);
-
-  //   console.log("in multi-repository create");
-  //   console.log({ ...options, ...multiOptions });
-
-  //   return super.create(entity, { ...options, ...multiOptions });
-  // }
-
-  async _getMultiOptions(hostname: string) {
+  private async _getMultiOptions(hostname: string) {
     let domain: Domain | undefined;
     let database: string | undefined;
 

@@ -26,7 +26,7 @@
     "posttest": "npm run lint",
     "test:dev": "lb-mocha --allow-console-logs dist/__tests__/**/*.js && npm run posttest",
     "docker:build": "docker build -t ratekl-api .",
-    "docker:run": "docker run -p 3000:3000 -d ratekl-api",
+    "docker:run": "docker run -p 3333:3333 -d ratekl-api",
     "premigrate": "npm run build",
     "migrate": "node ./dist/migrate",
     "preopenapi-spec": "npm run build",
@@ -49,6 +49,8 @@
     "!*/__tests__"
   ],
   "dependencies": {
+    "@loopback/authentication": "^10.1.4",
+    "@loopback/authorization": "^0.14.4",
     "@loopback/boot": "^6.1.4",
     "@loopback/core": "^5.1.4",
     "@loopback/repository": "^6.1.4",
@@ -57,6 +59,8 @@
     "@loopback/service-proxy": "^6.1.4",
     "dotenv": "^16.3.1",
     "loopback-connector-mongodb": "github:ratekl/loopback-connector-mongodb#multiple-database-share-connection",
+    "loopback-supertokens": "github:phairow/loopback-supertokens#master",
+    "supertokens-node": "^16.6.8",
     "tslib": "^2.6.2"
   },
   "devDependencies": {

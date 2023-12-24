@@ -1,10 +1,3 @@
-// Copyright IBM Corp. 2019,2020. All Rights Reserved.
-// Node module: loopback4-example-shopping
-// This file is licensed under the MIT License.
-// License text available at https://opensource.org/licenses/MIT
-
-// import {authenticate} from '@loopback/authentication';
-// import {authorize} from '@loopback/authorization';
 import {
   Count,
   CountSchema,
@@ -26,8 +19,6 @@ import {
 } from '@loopback/rest';
 import { AppInfo } from '../models/app-info.model';
 import { AppInfoRepository} from '../repositories/app-info.repository';
-// import {basicAuthorization} from '../services';
-// import {OPERATION_SECURITY_SPEC} from '../utils';
 
 export class AppInfoController {
   constructor(
@@ -164,7 +155,7 @@ export class AppInfoController {
       },
     },
   })
-  async replaceByHostname(
+  async replaceById(
     @param.path.string('id') id: string,
     @requestBody() appInfo: AppInfo,
   ): Promise<void> {
@@ -178,7 +169,7 @@ export class AppInfoController {
       },
     },
   })
-  async deleteByHostname(
+  async deleteById(
     @param.path.string('id') id: string,
   ): Promise<void> {
     await this.appInfoRepository.deleteById(id);

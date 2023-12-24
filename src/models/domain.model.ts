@@ -1,17 +1,16 @@
-import {Entity, model, property, belongsTo} from '@loopback/repository';
+import { Entity, model, property } from "@loopback/repository";
 
 @model()
 export class Domain extends Entity {
-
-  @property({ id: true, type: 'string', required: true })
+  @property({ id: true, type: "string", required: true })
   hostname: string;
 
-  @property({ type: 'string', required: true })
+  @property({ type: "string", required: true })
   database: string;
 
-  @property({ type: 'boolean', default: false })
+  @property({ type: "boolean", default: false })
   active: string;
-  
+
   constructor(data?: Partial<Domain>) {
     super(data);
   }

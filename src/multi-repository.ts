@@ -42,7 +42,7 @@ export class MultiRepository<
     public context: RequestContext,
     public domainRepository: DomainRepository
   ) {
-    super(entityClass, dataSource)
+    super(entityClass, dataSource);
   }
 
   async create(entity: DataObject<T>, options?: Options): Promise<T> {
@@ -57,11 +57,9 @@ export class MultiRepository<
     const currentModel = await this._getModel(this.entityClass);
     // perform persist hook
     const data = await Promise.all(
-      entities.map(e => this.entityToData(e, options)),
+      entities.map((e) => this.entityToData(e, options))
     );
-    const models = await ensurePromise(
-      currentModel.createAll(data, options),
-    );
+    const models = await ensurePromise(currentModel.createAll(data, options));
     return this.toEntities(models);
   }
 
@@ -77,12 +75,12 @@ export class MultiRepository<
 
   async find(
     filter?: Filter<T>,
-    options?: Options,
+    options?: Options
   ): Promise<(T & Relations)[]> {
     const currentModel = await this._getModel(this.entityClass);
     const include = filter?.include;
     const models = await ensurePromise(
-      currentModel.find(this.normalizeFilter(filter), options),
+      currentModel.find(this.normalizeFilter(filter), options)
     );
     const entities = this.toEntities(models);
     return this.includeRelatedModels(entities, include, options);
@@ -90,11 +88,11 @@ export class MultiRepository<
 
   async findOne(
     filter?: Filter<T>,
-    options?: Options,
+    options?: Options
   ): Promise<(T & Relations) | null> {
     const currentModel = await this._getModel(this.entityClass);
     const model = await ensurePromise(
-      currentModel.findOne(this.normalizeFilter(filter), options),
+      currentModel.findOne(this.normalizeFilter(filter), options)
     );
     if (!model) return null;
     const entity = this.toEntity(model);
@@ -102,7 +100,7 @@ export class MultiRepository<
     const resolved = await this.includeRelatedModels(
       [entity],
       include,
-      options,
+      options
     );
     return resolved[0];
   }
@@ -110,12 +108,12 @@ export class MultiRepository<
   async findById(
     id: ID,
     filter?: FilterExcludingWhere<T>,
-    options?: Options,
+    options?: Options
   ): Promise<T & Relations> {
     const currentModel = await this._getModel(this.entityClass);
     const include = filter?.include;
     const model = await ensurePromise(
-      currentModel.findById(id, this.normalizeFilter(filter), options),
+      currentModel.findById(id, this.normalizeFilter(filter), options)
     );
     if (!model) {
       throw new EntityNotFoundError(this.entityClass, id);
@@ -124,7 +122,7 @@ export class MultiRepository<
     const resolved = await this.includeRelatedModels(
       [entity],
       include,
-      options,
+      options
     );
     return resolved[0];
   }
@@ -142,28 +140,28 @@ export class MultiRepository<
   async updateAll(
     data: DataObject<T>,
     where?: Where<T>,
-    options?: Options,
+    options?: Options
   ): Promise<Count> {
     const currentModel = await this._getModel(this.entityClass);
     where = where ?? {};
     const persistedData = await this.entityToData(data, options);
     const result = await ensurePromise(
-      currentModel.updateAll(where, persistedData, options),
+      currentModel.updateAll(where, persistedData, options)
     );
-    return {count: result.count};
+    return { count: result.count };
   }
 
   async updateById(
     id: ID,
     data: DataObject<T>,
-    options?: Options,
+    options?: Options
   ): Promise<void> {
     const currentModel = await this._getModel(this.entityClass);
     if (!Object.keys(data).length) {
       throw new InvalidBodyError(this.entityClass, id);
     }
     if (id === undefined) {
-      throw new Error('Invalid Argument: id cannot be undefined');
+      throw new Error("Invalid Argument: id cannot be undefined");
     }
     const idProp = currentModel.definition.idName();
     const where = {} as Where<T>;
@@ -177,7 +175,7 @@ export class MultiRepository<
   async replaceById(
     id: ID,
     data: DataObject<T>,
-    options?: Options,
+    options?: Options
   ): Promise<void> {
     const currentModel = await this._getModel(this.entityClass);
     try {
@@ -193,10 +191,8 @@ export class MultiRepository<
 
   async deleteAll(where?: Where<T>, options?: Options): Promise<Count> {
     const currentModel = await this._getModel(this.entityClass);
-    const result = await ensurePromise(
-      currentModel.deleteAll(where, options),
-    );
-    return {count: result.count};
+    const result = await ensurePromise(currentModel.deleteAll(where, options));
+    return { count: result.count };
   }
 
   async deleteById(id: ID, options?: Options): Promise<void> {
@@ -210,22 +206,23 @@ export class MultiRepository<
   async count(where?: Where<T>, options?: Options): Promise<Count> {
     const currentModel = await this._getModel(this.entityClass);
     const result = await ensurePromise(currentModel.count(where, options));
-    return {count: result};
+    return { count: result };
   }
 
   async exists(id: ID, options?: Options): Promise<boolean> {
     const currentModel = await this._getModel(this.entityClass);
-    return await ensurePromise(currentModel.exists(id, options));
+    const result = await ensurePromise(currentModel.exists(id, options));
+    return result;
   }
 
   private _getModelName(name: string) {
-    return name + '_app_' + this.request?.hostname?.replace(/\./g,'_');
+    return name + "_app_" + this.request?.hostname?.replace(/\./g, "_");
   }
 
   // Create an internal legacy Model attached to the datasource
   // This is specific to the domain for multi-repository
   private async _getModel(
-    entityClass: typeof Model,
+    entityClass: typeof Model
   ): Promise<typeof juggler.PersistedModel> {
     const definition = entityClass.definition;
 
@@ -233,13 +230,16 @@ export class MultiRepository<
 
     const modelName = this._getModelName(definition.name);
 
-    const model = dataSource.getModel(modelName) ;
-    if (model && typeof (model as any).find === 'function') {
+    const model = dataSource.getModel(modelName) as typeof juggler.PersistedModel;
+
+    if (model && typeof model.find === "function") {
       // The backing persisted model has been already defined.
-      return model as typeof juggler.PersistedModel;
+      return model;
     }
 
-    return await this._definePersistedModelMulti(entityClass);
+    const result = await this._definePersistedModelMulti(entityClass);
+
+    return result ;
   }
 
   /**
@@ -249,7 +249,7 @@ export class MultiRepository<
    * @param entityClass - LB4 Entity constructor
    */
   private async _definePersistedModelMulti(
-    entityClass: typeof Model,
+    entityClass: typeof Model
   ): Promise<typeof juggler.PersistedModel> {
     const dataSource = this.dataSource;
     const definition = entityClass.definition;
@@ -261,16 +261,18 @@ export class MultiRepository<
 
     // We need to convert property definitions from PropertyDefinition
     // to plain data object because of a juggler limitation
-    const properties: {[name: string]: object} = {};
+    const properties: { [name: string]: object } = {};
 
     // We need to convert PropertyDefinition into the definition that
     // the juggler understands
     Object.entries(definition.properties).forEach(([key, value]) => {
       // always clone value so that we do not modify the original model definition
       // ensures that model definitions can be reused with multiple datasources
-      if (value.type === 'array' || value.type === Array) {
+      if (value.type === "array" || value.type === Array) {
         value = Object.assign({}, value, {
-          type: [value.itemType && this._resolvePropertyTypeMulti(value.itemType)],
+          type: [
+            value.itemType && this._resolvePropertyTypeMulti(value.itemType),
+          ],
         });
         delete value.itemType;
       } else {
@@ -281,7 +283,7 @@ export class MultiRepository<
       properties[key] = Object.assign({}, value);
     });
 
-    const multiOptions = await this._getMultiOptions(this.request?.hostname);
+    const multiOptions = await this._getMultiOptions(this.request?.hostname.replace(/\.local$/, ''));
 
     const settings = { ...definition.settings, ...multiOptions };
 
@@ -290,12 +292,12 @@ export class MultiRepository<
       properties,
       Object.assign(
         // settings that users can override
-        {strict: true},
+        { strict: true },
         // user-defined settings
         settings,
         // settings enforced by the framework
-        {strictDelete: false},
-      ),
+        { strictDelete: false }
+      )
     );
     modelClass.attachTo(dataSource);
     return modelClass;
@@ -303,27 +305,20 @@ export class MultiRepository<
 
   private _resolvePropertyTypeMulti(type: PropertyType): PropertyType {
     const resolved = resolveType(type);
-    return isModelClass(resolved)
-      ? this._getModel(resolved)
-      : resolved;
+    return isModelClass(resolved) ? this._getModel(resolved) : resolved;
   }
 
   private async _getMultiOptions(hostname: string) {
-    let domain: Domain | undefined;
-    let database: string | undefined;
-
-    domain = hostname
+    const domain = hostname
       ? await this?.domainRepository?.findById(hostname)
       : undefined;
-
-    database = domain?.database;
+    const database = domain?.database;
 
     if (!database) {
       throw new EntityNotFoundError(Domain, hostname);
     }
 
-    const collection =
-      this.entityClass?.name;
+    const collection = this.entityClass?.name;
 
     return {
       mongodb: {
@@ -335,12 +330,12 @@ export class MultiRepository<
 }
 
 function isModelClass(
-  propertyType: PropertyType | undefined,
+  propertyType: PropertyType | undefined
 ): propertyType is typeof Model {
   return (
     !isTypeResolver(propertyType) &&
-    typeof propertyType === 'function' &&
-    typeof (propertyType as typeof Model).definition === 'object' &&
-    propertyType.toString().startsWith('class ')
+    typeof propertyType === "function" &&
+    typeof (propertyType as typeof Model).definition === "object" &&
+    propertyType.toString().startsWith("class ")
   );
 }

@@ -1,10 +1,5 @@
-// Copyright IBM Corp. 2019,2020. All Rights Reserved.
-// Node module: loopback4-example-shopping
-// This file is licensed under the MIT License.
-// License text available at https://opensource.org/licenses/MIT
-
-// import {authenticate} from '@loopback/authentication';
-// import {authorize} from '@loopback/authorization';
+import {authenticate} from '@loopback/authentication';
+import {authorize} from '@loopback/authorization';
 import {
   Count,
   CountSchema,
@@ -26,8 +21,8 @@ import {
 } from '@loopback/rest';
 import { Domain } from '../models/domain.model';
 import { DomainRepository} from '../repositories/domain.repository';
-// import {basicAuthorization} from '../services';
-// import {OPERATION_SECURITY_SPEC} from '../utils';
+
+const securityRequirement = [{jwt: []}];
 
 export class DomainController {
   constructor(
@@ -36,6 +31,7 @@ export class DomainController {
   ) {}
   
   @post('/domains', {
+    security: securityRequirement,
     responses: {
       '200': {
         description: 'Domain model instance',
@@ -56,7 +52,10 @@ export class DomainController {
     return this.domainRepository.create(domain);
   }
 
+  // @authenticate('supertokens')
+  // @authorize({allowedRoles: ['admin']})
   @get('/domains/count', {
+    security: securityRequirement,
     responses: {
       '200': {
         description: 'Domain model count',
@@ -72,6 +71,7 @@ export class DomainController {
   }
 
   @get('/domains', {
+    security: securityRequirement,
     responses: {
       '200': {
         description: 'Array of domain model instances',
@@ -94,6 +94,7 @@ export class DomainController {
   }
 
   @patch('/domains', {
+    security: securityRequirement,
     responses: {
       '200': {
         description: 'Domain PATCH success count',
@@ -117,6 +118,7 @@ export class DomainController {
   }
 
   @get('/domains/{hostname}', {
+    security: securityRequirement,
     responses: {
       '200': {
         description: 'Domain model instance',
@@ -137,6 +139,7 @@ export class DomainController {
   }
 
   @patch('/domains/{hostname}', {
+    security: securityRequirement,
     responses: {
       '204': {
         description: 'Domain PATCH success',
@@ -158,6 +161,7 @@ export class DomainController {
   }
 
   @put('/domains/{hostname}', {
+    security: securityRequirement,
     responses: {
       '204': {
         description: 'Product PUT success',
@@ -172,6 +176,7 @@ export class DomainController {
   }
 
   @del('/domains/{hostname}', {
+    security: securityRequirement,
     responses: {
       '204': {
         description: 'Domain DELETE success',

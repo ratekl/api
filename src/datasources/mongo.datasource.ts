@@ -1,21 +1,16 @@
-// Copyright IBM Corp. 2019,2020. All Rights Reserved.
-// Node module: loopback4-example-shopping
-// This file is licensed under the MIT License.
-// License text available at https://opensource.org/licenses/MIT
-
 import {inject, lifeCycleObserver, ValueOrPromise} from '@loopback/core';
 import {juggler, AnyObject} from '@loopback/repository';
 
 const config = {
   name: 'mongo',
   connector: 'mongodb',
-  url: 'mongodb://127.0.0.1:27017/test',
+  url: 'mongodb://127.0.0.1:27017/ratekl_core',
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };
 
 function updateConfig(dsConfig: AnyObject) {
-  dsConfig.url = process.env.RATEKL_APP_MONGODB_SERVICE_DATABASE_URL || config.url;
+  dsConfig.url = process.env.RATEKL_APP_MONGODB_SERVICE_DATABASE_URL ?? config.url;
   
   return dsConfig;
 }

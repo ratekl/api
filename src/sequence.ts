@@ -1,13 +1,6 @@
-import { inject } from "@loopback/core";
 import {
-  InvokeMiddleware,
-  InvokeMiddlewareOptions,
   MiddlewareSequence,
-  RequestContext,
-  SequenceActions,
 } from "@loopback/rest";
-import { debug } from "console";
-import { config } from "dotenv";
 
 export class MySequence extends MiddlewareSequence {
   // async handle(context: RequestContext) {

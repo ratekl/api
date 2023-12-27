@@ -31,6 +31,7 @@ export class DomainController {
   ) {}
   
   @post('/domains', {
+    operationId: 'create',
     security: securityRequirement,
     responses: {
       '200': {
@@ -55,6 +56,7 @@ export class DomainController {
   // @authenticate('supertokens')
   // @authorize({allowedRoles: ['admin']})
   @get('/domains/count', {
+    operationId: 'count',
     security: securityRequirement,
     responses: {
       '200': {
@@ -71,6 +73,7 @@ export class DomainController {
   }
 
   @get('/domains', {
+    operationId: 'find',
     security: securityRequirement,
     responses: {
       '200': {
@@ -94,6 +97,7 @@ export class DomainController {
   }
 
   @patch('/domains', {
+    operationId: 'updateAll',
     security: securityRequirement,
     responses: {
       '200': {
@@ -118,6 +122,7 @@ export class DomainController {
   }
 
   @get('/domains/{hostname}', {
+    operationId: 'findByHostname',
     security: securityRequirement,
     responses: {
       '200': {
@@ -139,6 +144,7 @@ export class DomainController {
   }
 
   @patch('/domains/{hostname}', {
+    operationId: 'updateByHostname',
     security: securityRequirement,
     responses: {
       '204': {
@@ -161,6 +167,7 @@ export class DomainController {
   }
 
   @put('/domains/{hostname}', {
+    operationId: 'replaceByHostname',
     security: securityRequirement,
     responses: {
       '204': {
@@ -176,6 +183,7 @@ export class DomainController {
   }
 
   @del('/domains/{hostname}', {
+    operationId: 'deleteByHostname',
     security: securityRequirement,
     responses: {
       '204': {

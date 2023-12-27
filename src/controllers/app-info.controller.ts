@@ -27,6 +27,7 @@ export class AppInfoController {
   ) {}
   
   @post('/app-info', {
+    operationId: 'create',
     responses: {
       '200': {
         description: 'AppInfo model instance',
@@ -48,6 +49,7 @@ export class AppInfoController {
   }
 
   @get('/app-info/count', {
+    operationId: 'count',
     responses: {
       '200': {
         description: 'AppInfo model count',
@@ -63,6 +65,7 @@ export class AppInfoController {
   }
 
   @get('/app-info', {
+    operationId: 'find',
     responses: {
       '200': {
         description: 'Array of appInfo model instances',
@@ -85,6 +88,7 @@ export class AppInfoController {
   }
 
   @patch('/app-info', {
+    operationId: 'updateAll',
     responses: {
       '200': {
         description: 'AppInfo PATCH success count',
@@ -108,6 +112,7 @@ export class AppInfoController {
   }
 
   @get('/app-info/{id}', {
+    operationId: 'findById',
     responses: {
       '200': {
         description: 'AppInfo model instance',
@@ -128,6 +133,7 @@ export class AppInfoController {
   }
 
   @patch('/app-info/{id}', {
+    operationId: 'updateById',
     responses: {
       '204': {
         description: 'AppInfo PATCH success',
@@ -149,6 +155,7 @@ export class AppInfoController {
   }
 
   @put('/app-info/{id}', {
+    operationId: 'replaceById',
     responses: {
       '204': {
         description: 'Product PUT success',
@@ -163,6 +170,7 @@ export class AppInfoController {
   }
 
   @del('/app-info/{id}', {
+    operationId: 'deleteById',
     responses: {
       '204': {
         description: 'AppInfo DELETE success',

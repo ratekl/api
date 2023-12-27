@@ -3,7 +3,6 @@ import {
   Request,
   RestBindings,
   get,
-  response,
   ResponseObject,
 } from '@loopback/rest';
 
@@ -18,16 +17,7 @@ const PING_RESPONSE: ResponseObject = {
         type: 'object',
         title: 'PingResponse',
         properties: {
-          greeting: {type: 'string'},
-          date: {type: 'string'},
-          url: {type: 'string'},
-          headers: {
-            type: 'object',
-            properties: {
-              'Content-Type': {type: 'string'},
-            },
-            additionalProperties: true,
-          },
+          timestamp: {type: 'string'},
         },
       },
     },
@@ -41,15 +31,22 @@ export class PingController {
   constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
 
   // Map to `GET /ping`
-  @get('/ping')
-  @response(200, PING_RESPONSE)
+  @get('/ping', {
+    operationId: 'ping',
+    responses: {
+      '200': {
+        description: 'Ping Response Data',
+        content: {
+          'application/json': {
+            schema: PING_RESPONSE,
+          },
+        },
+      },
+    },
+  })
   ping(): object {
-    // Reply with a greeting, the current time, the url, and request headers
     return {
-      greeting: 'Hello from LoopBack',
-      date: new Date(),
-      url: this.req.url,
-      headers: Object.assign({}, this.req.headers),
+      timestamp: new Date(),
     };
   }
 }

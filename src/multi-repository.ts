@@ -216,7 +216,15 @@ export class MultiRepository<
   }
 
   private _getModelName(name: string) {
-    return name + "_app_" + this.request?.hostname?.replace(/\./g, "_");
+    return name + "_app_" + this._getHostname()?.replace(/\./g, "_");
+  }
+
+  private _getHostname() {
+    if (this.request.headers['x-forwarded-host']){
+      return this.request.headers['x-forwarded-host'].toString().split(':')[0];
+    } else {
+      return this.request?.hostname;
+    }
   }
 
   // Create an internal legacy Model attached to the datasource
@@ -283,7 +291,7 @@ export class MultiRepository<
       properties[key] = Object.assign({}, value);
     });
 
-    const multiOptions = await this._getMultiOptions(this.request?.hostname.replace(/\.local$/, ''));
+    const multiOptions = await this._getMultiOptions(this._getHostname().replace(/\.local$/, ''));
 
     const settings = { ...definition.settings, ...multiOptions };
 

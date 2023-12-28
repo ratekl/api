@@ -52,7 +52,7 @@ export class RateklApiApplication extends BootMixin(
   constructor(options: ApplicationConfig = {}) {
     super(options);
 
-    initSuperTokens();
+    // initSuperTokens();
 
     // Bind authentication component related elements
     this.component(AuthenticationComponent);
@@ -74,7 +74,7 @@ export class RateklApiApplication extends BootMixin(
 
     // this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
 
-    this.component(SupertokensComponent);
+    // this.component(SupertokensComponent);
 
     // this.add(createBindingFromClass(SecuritySpecEnhancer));
 

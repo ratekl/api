@@ -10,6 +10,8 @@ const config = {
 };
 
 function updateConfig(dsConfig: AnyObject) {
+  console.log('config.url', config.url)
+  console.log('RATEKL_APP_MONGODB_SERVICE_DATABASE_URL', process.env.RATEKL_APP_MONGODB_SERVICE_DATABASE_URL)
   dsConfig.url = process.env.RATEKL_APP_MONGODB_SERVICE_DATABASE_URL ?? config.url;
   
   return dsConfig;

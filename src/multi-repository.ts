@@ -219,11 +219,15 @@ export class MultiRepository<
     return name + "_app_" + this._getHostname()?.replace(/\./g, "_");
   }
 
+  private _clean(hostname: string) {
+    return hostname.replace('www.', '').replace(/\.local$/, '');
+  }
+
   private _getHostname() {
     if (this.request.headers['x-forwarded-host']){
-      return this.request.headers['x-forwarded-host'].toString().split(':')[0];
+      return this._clean(this.request.headers['x-forwarded-host'].toString().split(':')[0]);
     } else {
-      return this.request?.hostname;
+      return this._clean(this.request.hostname);
     }
   }
 
@@ -291,7 +295,7 @@ export class MultiRepository<
       properties[key] = Object.assign({}, value);
     });
 
-    const multiOptions = await this._getMultiOptions(this._getHostname().replace(/\.local$/, ''));
+    const multiOptions = await this._getMultiOptions(this._getHostname());
 
     const settings = { ...definition.settings, ...multiOptions };
 

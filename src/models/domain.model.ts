@@ -8,6 +8,9 @@ export class Domain extends Entity {
   @property({ type: "string", required: true })
   database: string;
 
+  @property({ type: "string", required: false })
+  redirect: string;
+
   @property({ type: "boolean", default: false })
   active: string;
 

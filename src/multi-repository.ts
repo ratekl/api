@@ -220,7 +220,7 @@ export class MultiRepository<
   }
 
   private _clean(hostname: string) {
-    return hostname.replace('www.', '').replace(/\.local$/, '');
+    return hostname.replace('www.', '').replace('.preview.ratekl.com','').replace('-', '.').replace(/\.local$/, '');
   }
 
   private _getHostname() {

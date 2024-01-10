@@ -25,6 +25,90 @@ export class AppInfoController {
     @repository(AppInfoRepository)
     protected appInfoRepository: AppInfoRepository,
   ) {}
+
+  @post('/publish/', {
+    operationId: 'publish',
+    responses: {
+      '200': {
+        description: 'AppInfo model count',
+        content: {'application/json': {schema: CountSchema}},
+      },
+    },
+  })
+  async publish(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: { type: 'object', properties: { name: { type: 'string' } }},
+        },
+      },
+    })
+    publishInfo: { name: string },
+  ): Promise<Count> {
+    let count = 0;
+    // get `published` and set as `previous` (don't unpublish yet, publish new version first)
+    const appInfoPrevious = (await this.appInfoRepository.find({ fields: { "name": true }, where: { published: { 'eq': true } }}))[0];
+    if (appInfoPrevious) {
+      await this.appInfoRepository.updateById(appInfoPrevious.name, { previous: true });
+      count += 1;
+    }
+
+    // update status of draft to publish
+    const appInfoPublish: AppInfo = new AppInfo({ published: true, publishedDate: (new Date()).toISOString(), draft: false, previous: false, history: false });
+    await this.appInfoRepository.updateById(publishInfo.name, appInfoPublish);
+    count += 1;
+
+    // set all others status to unpublished
+    const appInfoDraft: AppInfo = new AppInfo({ published: false });
+    const resUnpublish = await this.appInfoRepository.updateAll(appInfoDraft, { name: { 'neq': publishInfo.name } });
+    count += resUnpublish.count;
+
+    // clear old previous entry and set as history (has previous flag set true but not same name as previous published)
+    const appInfoHistory: AppInfo = new AppInfo({ previous: false, history: true });
+    const resHistory = await this.appInfoRepository.updateAll(appInfoHistory, { name: { 'neq': appInfoPrevious.name }, previous: { 'eq': true } });
+    count += resHistory.count;
+
+    // number of updated models
+    return { count };
+  }
+  
+  @post('/revert/', {
+    operationId: 'revert',
+    responses: {
+      '200': {
+        description: 'AppInfo model count',
+        content: {'application/json': {schema: CountSchema}},
+      },
+    },
+  })
+  async revert(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: { type: 'object', properties: { name: { type: 'string' } }},
+        },
+      },
+    })
+    publishInfo: { name: string },
+  ): Promise<Count> {
+    let count = 0;
+    // get `previous` and set as `published`
+    const appInfoPrevious = (await this.appInfoRepository.find({ fields: { "name": true }, where: { previous: { 'eq': true } }}))[0];
+    if (appInfoPrevious) {
+      await this.appInfoRepository.updateById(appInfoPrevious.name, { published: true, previous: false });
+      count += 1;
+    } else {
+      throw new Error(`Unable to revert '${publishInfo.name}' - previous published intance not found`);
+    }
+
+    // clear old published entry and set as previous (has published flag set true but not same name as previous published)
+    const appInfoRevert: AppInfo = new AppInfo({ published: false, previous: true });
+    const resUnpublish = await this.appInfoRepository.updateAll(appInfoRevert, { name: { 'neq': appInfoPrevious.name }, published: { 'eq': true } });
+    count += resUnpublish.count;
+
+    // number of updated models
+    return { count };
+  }
   
   @post('/app-info', {
     operationId: 'create',

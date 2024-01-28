@@ -7,6 +7,7 @@ const config = {
   url: 'mongodb://127.0.0.1:27017/ratekl_core',
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  ssl: true,
 };
 
 function updateConfig(dsConfig: AnyObject) {

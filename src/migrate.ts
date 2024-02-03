@@ -1,7 +1,8 @@
 import {RateklApiApplication} from './application';
 
 export async function migrate(args: string[]) {
-  const existingSchema = args.includes('--rebuild') ? 'drop' : 'alter';
+  // const existingSchema = args.includes('--rebuild') ? 'drop' : 'alter';
+  const existingSchema = 'alter';
   console.log('Migrating schemas (%s existing schema)', existingSchema);
 
   const app = new RateklApiApplication();

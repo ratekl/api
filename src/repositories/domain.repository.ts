@@ -10,4 +10,25 @@ export class DomainRepository extends DefaultCrudRepository<
   constructor(@inject('datasources.mongo') dataSource: MongoDataSource) {
     super(Domain, dataSource);
   }
+
+  definePersistedModel(entityClass: typeof Domain) {
+    const modelClass = super.definePersistedModel(entityClass);
+    modelClass.observe('before save', async (ctx: any) => {
+      console.log({
+        new: ctx.isNewInstance,
+        current: ctx.currentInstance,
+        instance: ctx.instance,
+        data: ctx.data,
+      })
+      const domain = ctx.instance ?? ctx.data;
+      if (ctx.isNewInstance) {
+        domain.createdAt = new Date();
+        domain.updatedAt = new Date();
+      } else {
+        domain.updatedAt = new Date();
+      }
+    });
+
+    return modelClass;
+  }
 }

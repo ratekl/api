@@ -1,11 +1,12 @@
 import { Entity, model, property } from "@loopback/repository";
+import { BaseModel } from "./_base-model";
 
 interface Info {
   [key: string]: string | number | boolean | null | Info | Info[];
 }
 
 @model()
-export class AppInfo extends Entity {
+export class AppInfo extends BaseModel {
   @property({ type: "string", id: true })
   name: string;
 

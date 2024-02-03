@@ -1,7 +1,8 @@
 import { Entity, model, property } from "@loopback/repository";
+import { BaseModel } from "./_base-model";
 
 @model()
-export class Domain extends Entity {
+export class Domain extends BaseModel {
   @property({ id: true, type: "string", required: true })
   hostname: string;
 

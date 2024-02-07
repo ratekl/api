@@ -1,4 +1,4 @@
-import { Entity, model, property } from "@loopback/repository";
+import { model, property } from "@loopback/repository";
 import { BaseModel } from "./_base-model";
 
 interface Data {

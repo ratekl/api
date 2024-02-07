@@ -313,12 +313,6 @@ export class MultiRepository<
     );
 
     modelClass.observe('before save', async (ctx: any) => {
-      console.log({
-        new: ctx.isNewInstance,
-        current: ctx.currentInstance,
-        instance: ctx.instance,
-        data: ctx.data,
-      })
       const domain = ctx.instance ?? ctx.data;
       if (ctx.isNewInstance) {
         domain.createdAt = new Date();

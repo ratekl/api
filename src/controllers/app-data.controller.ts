@@ -23,7 +23,6 @@ import { AppData } from '../models/app-data.model';
 import { AppDataRepository} from '../repositories/app-data.repository';
 import { inject } from '@loopback/core';
 import { MongoDataSource } from '../datasources/mongo.datasource';
-import { hostname } from 'os';
 
 export class AppDataController {
   constructor(

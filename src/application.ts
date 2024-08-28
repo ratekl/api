@@ -11,19 +11,19 @@ import {
 import { RepositoryMixin } from "@loopback/repository";
 import { RestApplication } from "@loopback/rest";
 import { ServiceMixin } from "@loopback/service-proxy";
-// import {
-//   JWTAuthenticationComponent,
-//   JWTService,
-//   SecuritySpecEnhancer,
-//   TokenServiceBindings,
-// } from '@loopback/authentication-jwt';
+import {
+  JWTAuthenticationComponent,
+  JWTService,
+  SecuritySpecEnhancer,
+  TokenServiceBindings,
+  UserServiceBindings,
+} from '@loopback/authentication-jwt';
 import path from "path";
 import { MySequence } from "./sequence";
 import { AuthenticationComponent } from "@loopback/authentication";
-import { AuthorizationComponent } from "@loopback/authorization";
-// import { AuthorizationComponent, AuthorizationDecision, AuthorizationOptions, AuthorizationTags } from '@loopback/authorization';
-// import crypto from 'crypto';
-// import { AuthorizationProvider } from './authorization';
+import { AuthorizationComponent, AuthorizationDecision, AuthorizationOptions, AuthorizationTags } from '@loopback/authorization';
+import crypto from 'crypto';
+import { AuthorizationProvider } from './_authorization';
 import SuperTokens from "supertokens-node";
 import {
   SupertokensComponent,
@@ -31,6 +31,8 @@ import {
 } from "loopback-supertokens";
 import Session from "supertokens-node/recipe/session";
 import ThirdPartyEmailPassword from "supertokens-node/recipe/thirdpartyemailpassword";
+import { ActivityServiceBindings, RateklActivityService } from "./ratekl/services/activity.service";
+// import { RateklUserService } from "./ratekl/services/user.service";
 
 export { ApplicationConfig };
 
@@ -57,36 +59,39 @@ export class RateklApiApplication extends BootMixin(
     // Bind authentication component related elements
     this.component(AuthenticationComponent);
     this.component(AuthorizationComponent);
-    // this.component(JWTAuthenticationComponent);
-    // const authBinding = this.component(AuthorizationComponent);
+    this.component(JWTAuthenticationComponent);
+    const authBinding = this.component(AuthorizationComponent);
 
-    // const authOptions: AuthorizationOptions = {
-    //   precedence: AuthorizationDecision.DENY,
-    //   defaultDecision: AuthorizationDecision.DENY,
-    // };
+    const authOptions: AuthorizationOptions = {
+      precedence: AuthorizationDecision.DENY,
+      defaultDecision: AuthorizationDecision.DENY,
+    };
 
-    // this.configure(authBinding.key).to(authOptions);
+    this.configure(authBinding.key).to(authOptions);
 
-    // this
-    //   .bind('authorizationProviders.authorizer-provider')
-    //   .toProvider(AuthorizationProvider)
-    //   .tag(AuthorizationTags.AUTHORIZER);
+    this
+      .bind('authorizationProviders.authorizer-provider')
+      .toProvider(AuthorizationProvider)
+      .tag(AuthorizationTags.AUTHORIZER);
 
-    // this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
+    this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
 
     // this.component(SupertokensComponent);
 
-    // this.add(createBindingFromClass(SecuritySpecEnhancer));
+    this.add(createBindingFromClass(SecuritySpecEnhancer));
 
     // Use JWT secret from JWT_SECRET environment variable if set
     // otherwise create a random string of 64 hex digits
-    // const secret =
-    //   process.env.JWT_SECRET ?? crypto.randomBytes(32).toString('hex');
-    //   console.log(secret)
-    // this.bind(TokenServiceBindings.TOKEN_SECRET).to(secret);
+    const secret =
+      process.env.JWT_SECRET ?? crypto.randomBytes(32).toString('hex');
+    this.bind(TokenServiceBindings.TOKEN_SECRET).to(secret);
 
     // Set up the custom sequence
     this.sequence(MySequence);
+
+    // this.bind(UserServiceBindings.USER_SERVICE).toClass(RateklUserService);
+
+    this.bind(ActivityServiceBindings.ACTIVITY_SERVICE).toClass(RateklActivityService);
 
     // Set up default home page
     this.static("/", path.join(__dirname, "../public"));

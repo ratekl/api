@@ -74,8 +74,7 @@ export class AppDataControllerV2 {
     if (appData.type === 'post' || appData.type === 'comment') {
       try {
         const appInfo = (await this.appInfoRepository.find({
-          // where: { published: true}
-          where: { draft: true}
+          where: { published: true}
         }))[0];
 
         if ((appInfo?.info?.features as any)?.pushBasic) {

@@ -23,11 +23,21 @@ import { AppData } from '../models/app-data.model';
 import { AppDataRepository} from '../repositories/app-data.repository';
 import { inject } from '@loopback/core';
 import { MongoDataSource } from '../datasources/mongo.datasource';
+import { AppInfoRepository } from '../repositories/app-info.repository';
+import { pushBasicComment, pushBasicPost } from '../ratekl/services/push-basic.service';
+import { AppMemberRepository } from '../repositories/app-member.repository';
+import { ActivityService, ActivityServiceBindings } from '../ratekl/services/activity.service';
 
 export class AppDataController {
   constructor(
+    @inject(ActivityServiceBindings.ACTIVITY_SERVICE)
+    protected activityService: ActivityService,
     @repository(AppDataRepository)
     protected appDataRepository: AppDataRepository,
+    @repository(AppInfoRepository)
+    protected appInfoRepository: AppInfoRepository,
+    @repository(AppMemberRepository)
+    protected appMemberRepository: AppMemberRepository,
     @inject('datasources.mongo')
     protected dataSource: MongoDataSource,
     @inject(RestBindings.Http.REQUEST)
@@ -53,6 +63,39 @@ export class AppDataController {
     })
     appData: AppData,
   ): Promise<AppData> {
+    if (appData.type === 'post' || appData.type === 'comment') {
+      try {
+        const appInfo = (await this.appInfoRepository.find({
+          where: { published: true}
+        }))[0];
+
+        if ((appInfo?.info?.features as any)?.pushBasic) {
+          try {
+            const postUser = await this.appMemberRepository.findById('' + (appData.data?.memberUserName ?? appData.data?.userName));
+            const title = (appInfo.info?.content as any)?.title;
+            const users = await this.appMemberRepository.find({
+              where: {
+                userName: {
+                  neq: postUser.userName
+                }
+              }
+            });
+            const hostName = this._clean(this.request.hostname);
+
+            if (appData.type === 'post') {
+              pushBasicPost(appData, postUser, title, users, this.appDataRepository, this.activityService, hostName);
+            } else if (appData.type === 'comment') {
+              pushBasicComment(appData, postUser, title, users, this.appDataRepository, this.activityService, hostName);;
+            }
+          } catch(e) {
+            console.log(e);
+          }
+        }
+      } catch(e) {
+        console.log(e);
+      }
+    }
+  
     return this.appDataRepository.create(appData);
   }
 

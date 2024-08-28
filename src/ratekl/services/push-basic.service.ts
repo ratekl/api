@@ -15,7 +15,7 @@ export const pushBasicPost = async (post: AppData, postUser: AppMember, title: s
         user,
         appDataRepository,
         activityService,
-        '' + user.memberData.pushToken,
+        '' + user.memberData,
         user.memberData.pushType === 'ios' ? 'ios' : 'android',
         title,
         `New message from ${postUser.preferredName ?? (postUser.firstName + ' ' + postUser.lastName)}`,

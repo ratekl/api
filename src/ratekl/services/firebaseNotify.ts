@@ -3,7 +3,7 @@ import { Message } from "firebase-admin/lib/messaging/messaging-api";
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_ACCOUNT_IOS ?? '');
 const serviceAccountAndroid = JSON.parse(process.env.FIREBASE_ACCOUNT_ANDROID ?? '');
-console.log(serviceAccount);
+
 const adminIos = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as ServiceAccount)
 }, 'adminIos');

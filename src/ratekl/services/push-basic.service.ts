@@ -9,13 +9,13 @@ import { securityId } from '@loopback/security';
 export const pushBasicPost = async (post: AppData, postUser: AppMember, title: string, users: AppMember[], appDataRepository: AppDataRepository, activityService: ActivityService, hostName: string) => {
   for (const user of users) {
     if (user.memberData?.pushToken) {
-        
+
       pushBasicMessage(
         hostName,
         user,
         appDataRepository,
         activityService,
-        '' + user.memberData,
+        '' + user.memberData.pushToken,
         user.memberData.pushType === 'ios' ? 'ios' : 'android',
         title,
         `New message from ${postUser.preferredName ?? (postUser.firstName + ' ' + postUser.lastName)}`,

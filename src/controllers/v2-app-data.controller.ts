@@ -79,7 +79,7 @@ export class AppDataControllerV2 {
 
         if ((appInfo?.info?.features as any)?.pushBasic) {
           try {
-            const postUser = await this.appMemberRepository.findById(this.loggedInUserProfile.email ?? this.loggedInUserProfile[securityId]);
+            const postUser = await this.appMemberRepository.findById('' + (appData.data?.memberUserName ?? appData.data?.userName));
             const title = (appInfo.info?.content as any)?.title;
             const users = await this.appMemberRepository.find({
               where: {
@@ -103,7 +103,7 @@ export class AppDataControllerV2 {
         console.log(e);
       }
     }
-
+  
     return this.appDataRepository.create(appData);
   }
 

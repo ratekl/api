@@ -4,6 +4,7 @@ import {
   RestBindings,
   get,
   ResponseObject,
+  oas,
 } from '@loopback/rest';
 
 /**
@@ -27,6 +28,7 @@ const PING_RESPONSE: ResponseObject = {
 /**
  * A simple controller to bounce back http requests
  */
+@oas.deprecated()
 export class PingController {
   constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {}
 

@@ -13,6 +13,7 @@ import {
   getFilterSchemaFor,
   getModelSchemaRef,
   getWhereSchemaFor,
+  oas,
   param,
   patch,
   post,
@@ -24,6 +25,7 @@ import { DomainRepository} from '../repositories/domain.repository';
 
 const securityRequirement = [{jwt: []}];
 
+@oas.deprecated()
 export class DomainController {
   constructor(
     @repository(DomainRepository)

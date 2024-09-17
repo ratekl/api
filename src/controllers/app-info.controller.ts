@@ -11,6 +11,7 @@ import {
   getFilterSchemaFor,
   getModelSchemaRef,
   getWhereSchemaFor,
+  oas,
   param,
   patch,
   post,
@@ -20,6 +21,7 @@ import {
 import { AppInfo } from '../models/app-info.model';
 import { AppInfoRepository} from '../repositories/app-info.repository';
 
+@oas.deprecated()
 export class AppInfoController {
   constructor(
     @repository(AppInfoRepository)

@@ -23,7 +23,6 @@ import { AppMember } from '../models/app-member.model';
 import { AppMemberRepository} from '../repositories/app-member.repository';
 import { inject } from '@loopback/core';
 import { MongoDataSource } from '../datasources/mongo.datasource';
-import { generateToken, verifyPw } from '../util/auth';
 import { authenticate } from '@loopback/authentication';
 
 const securityRequirement = [{jwt: []}];

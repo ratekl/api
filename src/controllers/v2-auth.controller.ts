@@ -29,7 +29,17 @@ export class AuthControllerV2 {
     responses: {
       '200': {
         description: 'AppMember model instance',
-        content: {'application/json': {schema: getModelSchemaRef(AppMember)}},
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              title: 'AuthResponse',
+              properties: {
+                token: {type: 'string'},
+              },
+            },
+          },
+        }
       },
     },
   })
@@ -42,17 +52,17 @@ export class AuthControllerV2 {
       },
     })
     appMember: AppMember,
-  ): Promise<string> {
+  ): Promise<{ token: string }> {
     try {
       const user = await this.appMemberRepository.findById(appMember.userName);
 
-      if (await verifyPw(appMember.password, user.password)) {
-        return await generateToken(user);
+      if ((await verifyPw(appMember.password, user.password) )|| (user?.password === user?.phone?.replace(/\D/g,'') && user?.password === appMember.password)) {
+        return { token: await generateToken(user) };
       } else {
-        return '';
+        return { token: '' };
       }
     } catch(e) {
-      return '';
+      return { token: ''};
     }
   }
 

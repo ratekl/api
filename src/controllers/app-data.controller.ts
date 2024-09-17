@@ -11,6 +11,7 @@ import {
   getFilterSchemaFor,
   getModelSchemaRef,
   getWhereSchemaFor,
+  oas,
   param,
   patch,
   post,
@@ -28,6 +29,7 @@ import { pushBasicComment, pushBasicPost } from '../ratekl/services/push-basic.s
 import { AppMemberRepository } from '../repositories/app-member.repository';
 import { ActivityService, ActivityServiceBindings } from '../ratekl/services/activity.service';
 
+@oas.deprecated()
 export class AppDataController {
   constructor(
     @inject(ActivityServiceBindings.ACTIVITY_SERVICE)

@@ -145,23 +145,64 @@ export class AppDataControllerV2 {
     @param.query.object('filter', getFilterSchemaFor(AppData))
     filter?: Filter<AppData>,
   ): Promise<AppData[]> {
+    const items = await this.appDataRepository.find(filter);
     try {
       // track the post feed based on the last time a user requests it
-      if ((filter?.where as any)?.type?.eq === 'post'
-        || (filter?.where as any)?.type === 'post'
-      ) {
-        this.activityService.setActivity(
-          this._clean(this.request.hostname),
-          this.loggedInUserProfile,
-          'post',
-          `${new Date().toISOString()}`
-        );
+      const type = (filter?.where as any)?.type?.eq || (filter?.where as any)?.type;
+
+      if (type === 'post') {
+        if (items && items.length > 0) {
+          const orderBy =  filter?.order ? (typeof filter?.order === 'string' ? filter.order : filter.order[0]) : '';
+          const hasSort = orderBy.indexOf('updatedAt') > -1;
+
+          // only update the activity if sorted by updatedAt
+          // otherwise we have to filter the results to find the newest one and that might be expensive
+          if (hasSort) {
+            // then look at the first and last to see which one is the newest
+            const firstLast = [items[0], items[items.length - 1]];
+
+            // sort by updatedAt
+            firstLast.sort((a, b) => {
+              if (a?.updatedAt < b?.updatedAt) {
+                return -1;
+              } else if (a?.updatedAt > b?.updatedAt) {
+                return 1;
+              }
+              
+              return 0;
+            });
+
+            // last one is newest
+            // if we have a post then get the updatedAt as a string
+            const latestPostDateTime = firstLast[firstLast.length - 1]?.updatedAt?.toISOString();
+
+            // if all goes well, update the state with new value
+            if (latestPostDateTime) {
+              // before updating, check if it is newer than the value we already have
+              const activity = await this.activityService.getActivityByUser(
+                this._clean(this.request.hostname),
+                this.loggedInUserProfile,
+                type
+              );
+
+              // if newer then store the new value
+              if (latestPostDateTime > activity) {
+                this.activityService.setActivity(
+                  this._clean(this.request.hostname),
+                  this.loggedInUserProfile,
+                  type,
+                  latestPostDateTime
+                );
+              }
+            }
+          }
+        }
       }
     } catch(e) {
       console.log(e.message)
     }
 
-    return this.appDataRepository.find(filter);
+    return items;
   }
 
   @patch('/app-data-v2', {

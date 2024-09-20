@@ -10,7 +10,7 @@ export class AppMember extends BaseModel {
   @property({ type: "string", id: true })
   userName: string;
 
-  @property({ type: "string", hidden: true })
+  @property({ type: "string"})
   password: string;
 
   @property({ type: "string", index: true  })

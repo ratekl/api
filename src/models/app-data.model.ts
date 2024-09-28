@@ -11,6 +11,9 @@ export class AppData extends BaseModel {
   name: string;
 
   @property({ type: "string", index: true })
+  access: string;
+
+  @property({ type: "string", index: true })
   type: string;
 
   @property({ type: "object" })

@@ -24,6 +24,7 @@ import { AppMemberRepository} from '../repositories/app-member.repository';
 import { inject } from '@loopback/core';
 import { MongoDataSource } from '../datasources/mongo.datasource';
 import { authenticate } from '@loopback/authentication';
+import { encryptPw } from '../util/auth';
 
 const securityRequirement = [{jwt: []}];
 
@@ -169,6 +170,9 @@ export class AppMemberControllerV2 {
     })
     appMember: AppMember,
   ): Promise<void> {
+    if (appMember.password?.length) {
+      appMember.password = await encryptPw(appMember.password);
+    }
     await this.appMemberRepository.updateById(userName, appMember);
   }
 

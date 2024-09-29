@@ -24,7 +24,6 @@ import { AppMember } from '../models/app-member.model';
 import { AppMemberRepository} from '../repositories/app-member.repository';
 import { inject } from '@loopback/core';
 import { MongoDataSource } from '../datasources/mongo.datasource';
-import { encryptPw } from '../util/auth';
 
 @oas.deprecated()
 export class AppMemberController {
@@ -162,9 +161,6 @@ export class AppMemberController {
     })
     appMember: AppMember,
   ): Promise<void> {
-    if (appMember.password?.length) {
-      appMember.password = await encryptPw(appMember.password);
-    }
     await this.appMemberRepository.updateById(userName, appMember);
   }
 

@@ -59,23 +59,23 @@ const pushBasicMessage = async (hostName: string, user: AppMember, appDataReposi
     },
   };
 
+  const lastSeen = await activityService.getActivityByUser(hostName, {
+    [securityId]: user.userName,
+    email: user.email,
+    name: `${user.preferredName ?? (user.firstName + ' ' + user.lastName)}`
+  }, 'post');
+
+  let posts = [];
+ 
+  if (lastSeen) {
+    posts = await appDataRepository.find({
+      where: { createdAt: {gt: new Date(lastSeen)}, type: {inq: ['post', 'comment']}}
+    });
+  }
+
+  const countPosts = posts.length;
+
   if (pushType === 'ios') {
-    const lastSeen = await activityService.getActivityByUser(hostName, {
-      [securityId]: user.userName,
-      email: user.email,
-      name: `${user.preferredName ?? (user.firstName + ' ' + user.lastName)}`
-    }, 'post');
-
-    let posts = [];
-   
-    if (lastSeen) {
-      posts = await appDataRepository.find({
-        where: { createdAt: {gt: new Date(lastSeen)}, type: {inq: ['post', 'comment']}}
-      });
-    }
-
-    const countPosts = posts.length;
-
     message.apns = {
       payload: {
         aps: {
@@ -86,6 +86,16 @@ const pushBasicMessage = async (hostName: string, user: AppMember, appDataReposi
 
     if (threadId && message.apns.payload?.aps) {
       message.apns.payload.aps.threadId = threadId;
+    }
+  } else {
+    message.android = {
+      notification: {
+        notificationCount: countPosts
+      }
+    };
+
+    if (threadId && message.android) {
+      message.android.data = { ...message.android.data, threadId };
     }
   }
 

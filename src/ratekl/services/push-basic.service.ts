@@ -6,6 +6,10 @@ import { AppDataRepository } from "../../repositories/app-data.repository";
 import { ActivityService } from "./activity.service";
 import { securityId } from '@loopback/security';
 
+const state = {
+
+};
+
 export const pushBasicPost = async (post: AppData, postUser: AppMember, title: string, users: AppMember[], appDataRepository: AppDataRepository, activityService: ActivityService, hostName: string) => {
   for (const user of users) {
     if (user.memberData?.pushToken) {
@@ -65,12 +69,33 @@ const pushBasicMessage = async (hostName: string, user: AppMember, appDataReposi
     name: `${user.preferredName ?? (user.firstName + ' ' + user.lastName)}`
   }, 'post');
 
-  let posts = [];
+  let posts: AppData[] = [];
  
   if (lastSeen) {
     posts = await appDataRepository.find({
       where: { createdAt: {gt: new Date(lastSeen)}, type: {inq: ['post', 'comment']}}
     });
+  }
+
+  try {
+    // update the activity so that we don't keep increasing message counts in notifications
+    const lastMessage = posts.reduce((prev, curr) => {
+      if (curr.createdAt > prev.createdAt) {
+        return curr
+      }
+
+      return prev;
+    });
+
+    if (lastMessage?.createdAt) {
+      await activityService.setActivity(hostName, {
+        [securityId]: user.userName,
+        email: user.email,
+        name: `${user.preferredName ?? (user.firstName + ' ' + user.lastName)}`
+      }, 'post', lastMessage.createdAt.toISOString());
+    }
+  } catch (e) {
+    console.log('error updating activity');
   }
 
   const countPosts = posts.length;

@@ -137,7 +137,35 @@ export class AppDataController {
     @param.query.object('filter', getFilterSchemaFor(AppData))
     filter?: Filter<AppData>,
   ): Promise<AppData[]> {
-    return this.appDataRepository.find(filter);
+    const items = await this.appDataRepository.find(filter);
+
+    try {
+      const typeFilter = (filter?.where as any)?.type;
+      const type: string | undefined = typeFilter && (typeFilter.eq || typeFilter);
+
+      if (type && (type === 'post' || type === 'comment')) {
+        const users = await this.appMemberRepository.find();
+        const userMap: { [key: string]: boolean} = {};
+        users.forEach((user) => {
+          if (!user.inactive) {
+            userMap[user.userName] = true;
+          }
+        });
+        return items.filter((item) => {
+          const username: string | undefined = (item.data?.memberUserName || item.data?.userName) as any;
+          if (username) {
+            return userMap[username];
+          }
+
+          return false;
+        });
+      }
+
+    } catch(e) {
+      console.log(e.message)
+    }
+
+    return items;
   }
 
   @patch('/app-data', {

@@ -78,13 +78,13 @@ export class AppMemberControllerV2 {
   ): Promise<Count> {
     return this.appMemberRepository.count(where);
   }
-
+ 
   @get('/app-member-v2', {
     operationId: 'find',
     security: securityRequirement,
     responses: {
       '200': {
-        description: 'Array of appMember model instances',
+        description: 'Array of appMember model instances, only active members are returned',
         content: {
           'application/json': {
             schema: {
@@ -97,6 +97,38 @@ export class AppMemberControllerV2 {
     },
   })
   async find(
+    @param.query.object('filter', getFilterSchemaFor(AppMember))
+    filter?: Filter<AppMember>,
+  ): Promise<AppMember[]> {
+    const updatedFilter: Filter<AppMember> = {
+      ...filter,
+      where: {
+        ...filter?.where,
+        inactive: { 'neq': true }
+      }
+    };
+
+    return this.appMemberRepository.find(updatedFilter);
+  }
+
+  @get('/app-member-v2/all', {
+    operationId: 'find',
+    security: securityRequirement,
+    responses: {
+      '200': {
+        description: 'Array of appMember model instances, including inactive',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: getModelSchemaRef(AppMember, {includeRelations: true}),
+            },
+          },
+        },
+      },
+    },
+  })
+  async findAll(
     @param.query.object('filter', getFilterSchemaFor(AppMember))
     filter?: Filter<AppMember>,
   ): Promise<AppMember[]> {

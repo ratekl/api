@@ -7,8 +7,12 @@ interface MemberData {
 
 @model()
 export class AppMember extends BaseModel {
+
   @property({ type: "string", id: true })
   userName: string;
+
+  @property({ type: "boolean", default: false})
+  inactive: boolean;
 
   @property({ type: "string"})
   password: string;

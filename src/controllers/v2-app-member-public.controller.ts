@@ -33,7 +33,7 @@ export class AppMemberPublicControllerV2 {
     operationId: 'find',
     responses: {
       '200': {
-        description: 'Array of appMember public model instances',
+        description: 'Array of appMember public model instances, only active members are returned',
         content: {
           'application/json': {
             schema: {
@@ -49,7 +49,15 @@ export class AppMemberPublicControllerV2 {
     @param.query.object('filter', getFilterSchemaFor(AppMember))
     filter?: Filter<AppMember>,
   ): Promise<AppMember[]> {
-    const items = cleanPublicMembers(await this.appMemberRepository.find(filter));
+    const updatedFilter: Filter<AppMember> = {
+      ...filter,
+      where: {
+        ...filter?.where,
+        inactive: { 'neq': true }
+      }
+    };
+
+    const items = cleanPublicMembers(await this.appMemberRepository.find(updatedFilter));
   
     return items;
   }

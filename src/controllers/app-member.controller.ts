@@ -78,7 +78,7 @@ export class AppMemberController {
     operationId: 'find',
     responses: {
       '200': {
-        description: 'Array of appMember model instances',
+        description: 'Array of appMember model instances, only active members are returned',
         content: {
           'application/json': {
             schema: {
@@ -91,6 +91,36 @@ export class AppMemberController {
     },
   })
   async find(
+    @param.query.object('filter', getFilterSchemaFor(AppMember))
+    filter?: Filter<AppMember>,
+  ): Promise<AppMember[]> {
+    const updatedFilter: Filter<AppMember> = {
+      ...filter,
+      where: {
+        ...filter?.where,
+        inactive: { 'neq': true }
+      }
+    };
+    return this.appMemberRepository.find(updatedFilter);
+  }
+
+  @get('/app-member/all', {
+    operationId: 'findAll',
+    responses: {
+      '200': {
+        description: 'Array of appMember model instances, including inactive',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: getModelSchemaRef(AppMember, {includeRelations: true}),
+            },
+          },
+        },
+      },
+    },
+  })
+  async findAll(
     @param.query.object('filter', getFilterSchemaFor(AppMember))
     filter?: Filter<AppMember>,
   ): Promise<AppMember[]> {

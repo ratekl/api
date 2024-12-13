@@ -27,8 +27,9 @@ import { SecurityBindings, securityId, UserProfile } from '@loopback/security';
 import { authenticate } from '@loopback/authentication';
 import { ActivityService, ActivityServiceBindings } from '../ratekl/services/activity.service';
 import { AppInfoRepository } from '../repositories/app-info.repository';
-import { pushBasicComment, pushBasicPost } from '../ratekl/services/push-basic.service';
+import { pushBasicComment, pushBasicPost, pushBasicReferral } from '../ratekl/services/push-basic.service';
 import { AppMemberRepository } from '../repositories/app-member.repository';
+import { AppMember } from '../models/app-member.model';
 
 const securityRequirement = [{jwt: []}];
 
@@ -71,7 +72,7 @@ export class AppDataControllerV2 {
     })
     appData: AppData,
   ): Promise<AppData> {
-    if (appData.type === 'post' || appData.type === 'comment') {
+    if (appData.type === 'post' || appData.type === 'comment' || appData.type === 'referral') {
       try {
         const appInfo = (await this.appInfoRepository.find({
           where: { published: true}
@@ -79,21 +80,29 @@ export class AppDataControllerV2 {
 
         if ((appInfo?.info?.features as any)?.pushBasic) {
           try {
-            const postUser = await this.appMemberRepository.findById('' + (appData.data?.memberUserName ?? appData.data?.userName));
+            const postUser = await this.appMemberRepository.findById('' + (appData.data?.memberUserName ?? appData.data?.userName ?? appData.data?.memberFromUserName));
             const title = (appInfo.info?.content as any)?.title;
-            const users = await this.appMemberRepository.find({
-              where: {
-                userName: {
-                  neq: postUser.userName
+            let users: AppMember[] = [];
+            
+            if (appData.type === 'post' || appData.type === 'comment') {
+              users = await this.appMemberRepository.find({
+                where: {
+                  userName: {
+                    neq: postUser.userName
+                  }
                 }
-              }
-            });
+              });
+            }
+
             const hostName = this._clean(this.request.hostname);
 
             if (appData.type === 'post') {
               pushBasicPost(appData, postUser, title, users, this.appDataRepository, this.activityService, hostName);
             } else if (appData.type === 'comment') {
               pushBasicComment(appData, postUser, title, users, this.appDataRepository, this.activityService, hostName);;
+            } else if (appData.type === 'referral') {
+              const user = await this.appMemberRepository.findById('' + appData.data?.memberToUserName);
+              pushBasicReferral(appData, postUser, title, user, this.appDataRepository, this.activityService, hostName);
             }
           } catch(e) {
             console.log(e);

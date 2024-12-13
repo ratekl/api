@@ -53,6 +53,27 @@ export const pushBasicComment = async (comment: AppData, postUser: AppMember, ti
   }
 }
 
+export const pushBasicReferral = async (referral: AppData, postUser: AppMember, title: string, user: AppMember, appDataRepository: AppDataRepository, activityService: ActivityService, hostName: string) => {
+  if (user.memberData?.pushToken) {
+    const r: any = referral?.data;
+
+    pushBasicMessage(
+      hostName,
+      user,
+      appDataRepository,
+      activityService,
+      '' + user.memberData.pushToken,
+      user.memberData.pushType === 'ios' ? 'ios' : 'android',
+      title,
+      `You have a new referral from ${postUser.preferredName ?? (postUser.firstName + ' ' + postUser.lastName)}`,
+      {
+        commentId: referral?.name
+      },
+      (r?.preferredName ? r?.preferredName : (r?.firstName ? `${r?.firstName} ${r?.lastName}` : r?.message))
+    );
+  }
+}
+
 const pushBasicMessage = async (hostName: string, user: AppMember, appDataRepository: AppDataRepository, activityService: ActivityService, token: string, pushType: 'ios' | 'android', messageTitle:string, messageBody: string, data: {[key: string]: string}, threadId?: string) => {
   const message: Message = {
     token,
